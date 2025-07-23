@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Video Ranking Survey</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .video-container {
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .video-box { 
+      flex: 1; 
+      margin: 0 10px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    iframe { width: 100%; height: 300px; border: none; }
+    h2 { 
+      text-align: left; 
+      margin: 10px 0 15px; /* Add bottom margin for spacing */ 
+    }
+    h3 { margin: 5px 0; }
+    .ranking-group {
+      margin-bottom: 30px;
+    }
+    .ranking-question {
+      margin-bottom: 40px;
+    }
+    .ranking-section {
+      display: flex;
+      justify-content: flex-start;
+      gap: 40px;
+      margin-top: 20px;
+    }
+    .source, .target {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .draggable-item, .drop-slot {
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: #f9f9f9;
+      width: 140px;
+      height: 40px;
+      box-sizing: border-box;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .draggable-item { cursor: grab; }
+    .drop-slot { background-color: #eef; }
+    .drop-slot.filled { background-color: #d6f5d6; }
+    .dragging { opacity: 0.5; }
+    button { display: block; margin: 30px 0 0 0; padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+
+  <div id="intro-text" style="margin: 0px; font-size: 20px; line-height: 1.5;">
+    <p>Welcome to the survey! Please use earphones and watch the videos in their entire length. You may need to unmute the videos.
+      Please rank each method based on the given criteria. Top rank is the best, and bottom rank is the worst.
+      For example, in terms of musical quality, top rank would mean the highest quality, middle rank the moderate quality, and bottom rank the lowest quality.
+      You can drag and drop the methods into the ranking slots, from left to right, for each question.
+      Once you have completed all rankings, click the "Submit" button at the bottom of the page.</p>
+  </div>
+
+  <form name="rankings" method="POST" data-netlify="true" onsubmit="return handleSubmit(event)">
+    <!-- Prolific ID Input -->
+    <div id="prolific-id-section" style="margin: 20px 0;">
+      <label for="prolific-id" style="font-size: 18px;">Please enter your Prolific ID. Input "none" if it doesn't apply:</label>
+      <input type="text" id="prolific-id" name="prolific_id" style="margin-left: 10px; padding: 5px; font-size: 16px;" required />
+    </div>
+
+    <!-- Music Theory Knowledge Question -->
+    <div id="music-theory-section" style="margin: 20px 0 50px 0;">
+      <label for="music-theory" style="font-size: 18px;">Do you have a knowledge of music theory?</label>
+      <select id="music-theory" name="music_theory" style="margin-left: 10px; padding: 5px; font-size: 16px;" required>
+      <option value="">Select an option</option>
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+      </select>
+    </div>
+
+    <!-- Video Sections -->
+    <div id="video-sections"></div>
+
+<!-- Hidden inputs for all rankings -->
+    <input type="hidden" name="v-ads_1_richness" id="input-v-ads_1-richness" value="" />
+    <input type="hidden" name="v-ads_1_quality" id="input-v-ads_1-quality" value="" />
+    <input type="hidden" name="v-ads_1_emotion" id="input-v-ads_1-emotion" value="" />
+    <input type="hidden" name="v-ads_1_timing" id="input-v-ads_1-timing" value="" />
+    <input type="hidden" name="v-ads_1_overall" id="input-v-ads_1-overall" value="" />
+    <input type="hidden" name="v-ads_2_richness" id="input-v-ads_2-richness" value="" />
+    <input type="hidden" name="v-ads_2_quality" id="input-v-ads_2-quality" value="" />
+    <input type="hidden" name="v-ads_2_emotion" id="input-v-ads_2-emotion" value="" />
+    <input type="hidden" name="v-ads_2_timing" id="input-v-ads_2-timing" value="" />
+    <input type="hidden" name="v-ads_2_overall" id="input-v-ads_2-overall" value="" />
+    <input type="hidden" name="v-ads_3_richness" id="input-v-ads_3-richness" value="" />
+    <input type="hidden" name="v-ads_3_quality" id="input-v-ads_3-quality" value="" />
+    <input type="hidden" name="v-ads_3_emotion" id="input-v-ads_3-emotion" value="" />
+    <input type="hidden" name="v-ads_3_timing" id="input-v-ads_3-timing" value="" />
+    <input type="hidden" name="v-ads_3_overall" id="input-v-ads_3-overall" value="" />
+    <input type="hidden" name="v-ads_4_richness" id="input-v-ads_4-richness" value="" />
+    <input type="hidden" name="v-ads_4_quality" id="input-v-ads_4-quality" value="" />
+    <input type="hidden" name="v-ads_4_emotion" id="input-v-ads_4-emotion" value="" />
+    <input type="hidden" name="v-ads_4_timing" id="input-v-ads_4-timing" value="" />
+    <input type="hidden" name="v-ads_4_overall" id="input-v-ads_4-overall" value="" />
+    <input type="hidden" name="v-ads_5_richness" id="input-v-ads_5-richness" value="" />
+    <input type="hidden" name="v-ads_5_quality" id="input-v-ads_5-quality" value="" />
+    <input type="hidden" name="v-ads_5_emotion" id="input-v-ads_5-emotion" value="" />
+    <input type="hidden" name="v-ads_5_timing" id="input-v-ads_5-timing" value="" />
+    <input type="hidden" name="v-ads_5_overall" id="input-v-ads_5-overall" value="" />
+    <input type="hidden" name="v-ads_6_richness" id="input-v-ads_6-richness" value="" />
+    <input type="hidden" name="v-ads_6_quality" id="input-v-ads_6-quality" value="" />
+    <input type="hidden" name="v-ads_6_emotion" id="input-v-ads_6-emotion" value="" />
+    <input type="hidden" name="v-ads_6_timing" id="input-v-ads_6-timing" value="" />
+    <input type="hidden" name="v-ads_6_overall" id="input-v-ads_6-overall" value="" />
+    <input type="hidden" name="v-ads_7_richness" id="input-v-ads_7-richness" value="" />
+    <input type="hidden" name="v-ads_7_quality" id="input-v-ads_7-quality" value="" />
+    <input type="hidden" name="v-ads_7_emotion" id="input-v-ads_7-emotion" value="" />
+    <input type="hidden" name="v-ads_7_timing" id="input-v-ads_7-timing" value="" />
+    <input type="hidden" name="v-ads_7_overall" id="input-v-ads_7-overall" value="" />
+    <input type="hidden" name="v-ads_8_richness" id="input-v-ads_8-richness" value="" />
+    <input type="hidden" name="v-ads_8_quality" id="input-v-ads_8-quality" value="" />
+    <input type="hidden" name="v-ads_8_emotion" id="input-v-ads_8-emotion" value="" />
+    <input type="hidden" name="v-ads_8_timing" id="input-v-ads_8-timing" value="" />
+    <input type="hidden" name="v-ads_8_overall" id="input-v-ads_8-overall" value="" />
+    <input type="hidden" name="v-ads_9_richness" id="input-v-ads_9-richness" value="" />
+    <input type="hidden" name="v-ads_9_quality" id="input-v-ads_9-quality" value="" />
+    <input type="hidden" name="v-ads_9_emotion" id="input-v-ads_9-emotion" value="" />
+    <input type="hidden" name="v-ads_9_timing" id="input-v-ads_9-timing" value="" />
+    <input type="hidden" name="v-ads_9_overall" id="input-v-ads_9-overall" value="" />
+    <input type="hidden" name="v-ads_10_richness" id="input-v-ads_10-richness" value="" />
+    <input type="hidden" name="v-ads_10_quality" id="input-v-ads_10-quality" value="" />
+    <input type="hidden" name="v-ads_10_emotion" id="input-v-ads_10-emotion" value="" />
+    <input type="hidden" name="v-ads_10_timing" id="input-v-ads_10-timing" value="" />
+    <input type="hidden" name="v-ads_10_overall" id="input-v-ads_10-overall" value="" />
+    <input type="hidden" name="v-ads_11_richness" id="input-v-ads_11-richness" value="" />
+    <input type="hidden" name="v-ads_11_quality" id="input-v-ads_11-quality" value="" />
+    <input type="hidden" name="v-ads_11_emotion" id="input-v-ads_11-emotion" value="" />
+    <input type="hidden" name="v-ads_11_timing" id="input-v-ads_11-timing" value="" />
+    <input type="hidden" name="v-ads_11_overall" id="input-v-ads_11-overall" value="" />
+    <input type="hidden" name="v-ads_12_richness" id="input-v-ads_12-richness" value="" />
+    <input type="hidden" name="v-ads_12_quality" id="input-v-ads_12-quality" value="" />
+    <input type="hidden" name="v-ads_12_emotion" id="input-v-ads_12-emotion" value="" />
+    <input type="hidden" name="v-ads_12_timing" id="input-v-ads_12-timing" value="" />
+    <input type="hidden" name="v-ads_12_overall" id="input-v-ads_12-overall" value="" />
+    <input type="hidden" name="v-ads_13_richness" id="input-v-ads_13-richness" value="" />
+    <input type="hidden" name="v-ads_13_quality" id="input-v-ads_13-quality" value="" />
+    <input type="hidden" name="v-ads_13_emotion" id="input-v-ads_13-emotion" value="" />
+    <input type="hidden" name="v-ads_13_timing" id="input-v-ads_13-timing" value="" />
+    <input type="hidden" name="v-ads_13_overall" id="input-v-ads_13-overall" value="" />
+    <input type="hidden" name="v-ads_14_richness" id="input-v-ads_14-richness" value="" />
+    <input type="hidden" name="v-ads_14_quality" id="input-v-ads_14-quality" value="" />
+    <input type="hidden" name="v-ads_14_emotion" id="input-v-ads_14-emotion" value="" />
+    <input type="hidden" name="v-ads_14_timing" id="input-v-ads_14-timing" value="" />
+    <input type="hidden" name="v-ads_14_overall" id="input-v-ads_14-overall" value="" />
+    <input type="hidden" name="v-ads_15_richness" id="input-v-ads_15-richness" value="" />
+    <input type="hidden" name="v-ads_15_quality" id="input-v-ads_15-quality" value="" />
+    <input type="hidden" name="v-ads_15_emotion" id="input-v-ads_15-emotion" value="" />
+    <input type="hidden" name="v-ads_15_timing" id="input-v-ads_15-timing" value="" />
+    <input type="hidden" name="v-ads_15_overall" id="input-v-ads_15-overall" value="" />
+    <input type="hidden" name="v-ads_16_richness" id="input-v-ads_16-richness" value="" />
+    <input type="hidden" name="v-ads_16_quality" id="input-v-ads_16-quality" value="" />
+    <input type="hidden" name="v-ads_16_emotion" id="input-v-ads_16-emotion" value="" />
+    <input type="hidden" name="v-ads_16_timing" id="input-v-ads_16-timing" value="" />
+    <input type="hidden" name="v-ads_16_overall" id="input-v-ads_16-overall" value="" />
+    <input type="hidden" name="v-ads_17_richness" id="input-v-ads_17-richness" value="" />
+    <input type="hidden" name="v-ads_17_quality" id="input-v-ads_17-quality" value="" />
+    <input type="hidden" name="v-ads_17_emotion" id="input-v-ads_17-emotion" value="" />
+    <input type="hidden" name="v-ads_17_timing" id="input-v-ads_17-timing" value="" />
+    <input type="hidden" name="v-ads_17_overall" id="input-v-ads_17-overall" value="" />
+    <input type="hidden" name="v-ads_18_richness" id="input-v-ads_18-richness" value="" />
+    <input type="hidden" name="v-ads_18_quality" id="input-v-ads_18-quality" value="" />
+    <input type="hidden" name="v-ads_18_emotion" id="input-v-ads_18-emotion" value="" />
+    <input type="hidden" name="v-ads_18_timing" id="input-v-ads_18-timing" value="" />
+    <input type="hidden" name="v-ads_18_overall" id="input-v-ads_18-overall" value="" />
+    <input type="hidden" name="v-ads_19_richness" id="input-v-ads_19-richness" value="" />
+    <input type="hidden" name="v-ads_19_quality" id="input-v-ads_19-quality" value="" />
+    <input type="hidden" name="v-ads_19_emotion" id="input-v-ads_19-emotion" value="" />
+    <input type="hidden" name="v-ads_19_timing" id="input-v-ads_19-timing" value="" />
+    <input type="hidden" name="v-ads_19_overall" id="input-v-ads_19-overall" value="" />
+    <input type="hidden" name="v-ads_20_richness" id="input-v-ads_20-richness" value="" />
+    <input type="hidden" name="v-ads_20_quality" id="input-v-ads_20-quality" value="" />
+    <input type="hidden" name="v-ads_20_emotion" id="input-v-ads_20-emotion" value="" />
+    <input type="hidden" name="v-ads_20_timing" id="input-v-ads_20-timing" value="" />
+    <input type="hidden" name="v-ads_20_overall" id="input-v-ads_20-overall" value="" />
+    <input type="hidden" name="v-ads_21_richness" id="input-v-ads_21-richness" value="" />
+    <input type="hidden" name="v-ads_21_quality" id="input-v-ads_21-quality" value="" />
+    <input type="hidden" name="v-ads_21_emotion" id="input-v-ads_21-emotion" value="" />
+    <input type="hidden" name="v-ads_21_timing" id="input-v-ads_21-timing" value="" />
+    <input type="hidden" name="v-ads_21_overall" id="input-v-ads_21-overall" value="" />
+    <input type="hidden" name="v-ads_22_richness" id="input-v-ads_22-richness" value="" />
+    <input type="hidden" name="v-ads_22_quality" id="input-v-ads_22-quality" value="" />
+    <input type="hidden" name="v-ads_22_emotion" id="input-v-ads_22-emotion" value="" />
+    <input type="hidden" name="v-ads_22_timing" id="input-v-ads_22-timing" value="" />
+    <input type="hidden" name="v-ads_22_overall" id="input-v-ads_22-overall" value="" />
+    <input type="hidden" name="v-ads_23_richness" id="input-v-ads_23-richness" value="" />
+    <input type="hidden" name="v-ads_23_quality" id="input-v-ads_23-quality" value="" />
+    <input type="hidden" name="v-ads_23_emotion" id="input-v-ads_23-emotion" value="" />
+    <input type="hidden" name="v-ads_23_timing" id="input-v-ads_23-timing" value="" />
+    <input type="hidden" name="v-ads_23_overall" id="input-v-ads_23-overall" value="" />
+    <input type="hidden" name="v-ads_24_richness" id="input-v-ads_24-richness" value="" />
+    <input type="hidden" name="v-ads_24_quality" id="input-v-ads_24-quality" value="" />
+    <input type="hidden" name="v-ads_24_emotion" id="input-v-ads_24-emotion" value="" />
+    <input type="hidden" name="v-ads_24_timing" id="input-v-ads_24-timing" value="" />
+    <input type="hidden" name="v-ads_24_overall" id="input-v-ads_24-overall" value="" />
+
+    <input type="hidden" name="v-ads_1-ads_2_difference" id="input-v-ads_1-ads_2-difference" value="" />
+    <input type="hidden" name="v-ads_1-ads_2_piano" id="input-v-ads_1-ads_2-piano" value="" />
+    <input type="hidden" name="v-ads_3-ads_4_difference" id="input-v-ads_3-ads_4-difference" value="" />
+    <input type="hidden" name="v-ads_3-ads_4_piano" id="input-v-ads_3-ads_4-piano" value="" />
+    <input type="hidden" name="v-ads_5-ads_6_difference" id="input-v-ads_5-ads_6-difference" value="" />
+    <input type="hidden" name="v-ads_5-ads_6_piano" id="input-v-ads_5-ads_6-piano" value="" />
+    <input type="hidden" name="v-ads_7-ads_8_difference" id="input-v-ads_7-ads_8-difference" value="" />
+    <input type="hidden" name="v-ads_7-ads_8_piano" id="input-v-ads_7-ads_8-piano" value="" />
+    <input type="hidden" name="v-ads_9-ads_10_difference" id="input-v-ads_9-ads_10-difference" value="" />
+    <input type="hidden" name="v-ads_9-ads_10_piano" id="input-v-ads_9-ads_10-piano" value="" />
+    <input type="hidden" name="v-ads_11-ads_12_difference" id="input-v-ads_11-ads_12-difference" value="" />
+    <input type="hidden" name="v-ads_11-ads_12_piano" id="input-v-ads_11-ads_12-piano" value="" />
+    <input type="hidden" name="v-ads_13-ads_14_difference" id="input-v-ads_13-ads_14-difference" value="" />
+    <input type="hidden" name="v-ads_13-ads_14_piano" id="input-v-ads_13-ads_14-piano" value="" />
+    <input type="hidden" name="v-ads_15-ads_16_difference" id="input-v-ads_15-ads_16-difference" value="" />
+    <input type="hidden" name="v-ads_15-ads_16_piano" id="input-v-ads_15-ads_16-piano" value="" />
+    <input type="hidden" name="v-ads_17-ads_18_difference" id="input-v-ads_17-ads_18-difference" value="" />
+    <input type="hidden" name="v-ads_17-ads_18_piano" id="input-v-ads_17-ads_18-piano" value="" />
+    <input type="hidden" name="v-ads_19-ads_20_difference" id="input-v-ads_19-ads_20-difference" value="" />
+    <input type="hidden" name="v-ads_19-ads_20_piano" id="input-v-ads_19-ads_20-piano" value="" />
+    <input type="hidden" name="v-ads_21-ads_22_difference" id="input-v-ads_21-ads_22-difference" value="" />
+    <input type="hidden" name="v-ads_21-ads_22_piano" id="input-v-ads_21-ads_22-piano" value="" />
+    <input type="hidden" name="v-ads_23-ads_24_difference" id="input-v-ads_23-ads_24-difference" value="" />
+    <input type="hidden" name="v-ads_23-ads_24_piano" id="input-v-ads_23-ads_24-piano" value="" />
+
+    <input type="hidden" name="v-ds3_1_richness" id="input-v-ds3_1-richness" value="" />
+    <input type="hidden" name="v-ds3_1_quality" id="input-v-ds3_1-quality" value="" />
+    <input type="hidden" name="v-ds3_1_emotion" id="input-v-ds3_1-emotion" value="" />
+    <input type="hidden" name="v-ds3_1_timing" id="input-v-ds3_1-timing" value="" />
+    <input type="hidden" name="v-ds3_1_overall" id="input-v-ds3_1-overall" value="" />
+    <input type="hidden" name="v-ds3_2_richness" id="input-v-ds3_2-richness" value="" />
+    <input type="hidden" name="v-ds3_2_quality" id="input-v-ds3_2-quality" value="" />
+    <input type="hidden" name="v-ds3_2_emotion" id="input-v-ds3_2-emotion" value="" />
+    <input type="hidden" name="v-ds3_2_timing" id="input-v-ds3_2-timing" value="" />
+    <input type="hidden" name="v-ds3_2_overall" id="input-v-ds3_2-overall" value="" />
+    <input type="hidden" name="v-ds3_3_richness" id="input-v-ds3_3-richness" value="" />
+    <input type="hidden" name="v-ds3_3_quality" id="input-v-ds3_3-quality" value="" />
+    <input type="hidden" name="v-ds3_3_emotion" id="input-v-ds3_3-emotion" value="" />
+    <input type="hidden" name="v-ds3_3_timing" id="input-v-ds3_3-timing" value="" />
+    <input type="hidden" name="v-ds3_3_overall" id="input-v-ds3_3-overall" value="" />
+    <input type="hidden" name="v-ds3_4_richness" id="input-v-ds3_4-richness" value="" />
+    <input type="hidden" name="v-ds3_4_quality" id="input-v-ds3_4-quality" value="" />
+    <input type="hidden" name="v-ds3_4_emotion" id="input-v-ds3_4-emotion" value="" />
+    <input type="hidden" name="v-ds3_4_timing" id="input-v-ds3_4-timing" value="" />
+    <input type="hidden" name="v-ds3_4_overall" id="input-v-ds3_4-overall" value="" />
+    <input type="hidden" name="v-ds3_5_richness" id="input-v-ds3_5-richness" value="" />
+    <input type="hidden" name="v-ds3_5_quality" id="input-v-ds3_5-quality" value="" />
+    <input type="hidden" name="v-ds3_5_emotion" id="input-v-ds3_5-emotion" value="" />
+    <input type="hidden" name="v-ds3_5_timing" id="input-v-ds3_5-timing" value="" />
+    <input type="hidden" name="v-ds3_5_overall" id="input-v-ds3_5-overall" value="" />
+    <input type="hidden" name="v-ds3_6_richness" id="input-v-ds3_6-richness" value="" />
+    <input type="hidden" name="v-ds3_6_quality" id="input-v-ds3_6-quality" value="" />
+    <input type="hidden" name="v-ds3_6_emotion" id="input-v-ds3_6-emotion" value="" />
+    <input type="hidden" name="v-ds3_6_timing" id="input-v-ds3_6-timing" value="" />
+    <input type="hidden" name="v-ds3_6_overall" id="input-v-ds3_6-overall" value="" />
+    <input type="hidden" name="v-ds3_7_richness" id="input-v-ds3_7-richness" value="" />
+    <input type="hidden" name="v-ds3_7_quality" id="input-v-ds3_7-quality" value="" />
+    <input type="hidden" name="v-ds3_7_emotion" id="input-v-ds3_7-emotion" value="" />
+    <input type="hidden" name="v-ds3_7_timing" id="input-v-ds3_7-timing" value="" />
+    <input type="hidden" name="v-ds3_7_overall" id="input-v-ds3_7-overall" value="" />
+    <input type="hidden" name="v-ds3_8_richness" id="input-v-ds3_8-richness" value="" />
+    <input type="hidden" name="v-ds3_8_quality" id="input-v-ds3_8-quality" value="" />
+    <input type="hidden" name="v-ds3_8_emotion" id="input-v-ds3_8-emotion" value="" />
+    <input type="hidden" name="v-ds3_8_timing" id="input-v-ds3_8-timing" value="" />
+    <input type="hidden" name="v-ds3_8_overall" id="input-v-ds3_8-overall" value="" />
+    <input type="hidden" name="v-ds3_9_richness" id="input-v-ds3_9-richness" value="" />
+    <input type="hidden" name="v-ds3_9_quality" id="input-v-ds3_9-quality" value="" />
+    <input type="hidden" name="v-ds3_9_emotion" id="input-v-ds3_9-emotion" value="" />
+    <input type="hidden" name="v-ds3_9_timing" id="input-v-ds3_9-timing" value="" />
+    <input type="hidden" name="v-ds3_9_overall" id="input-v-ds3_9-overall" value="" />
+    <input type="hidden" name="v-ds3_10_richness" id="input-v-ds3_10-richness" value="" />
+    <input type="hidden" name="v-ds3_10_quality" id="input-v-ds3_10-quality" value="" />
+    <input type="hidden" name="v-ds3_10_emotion" id="input-v-ds3_10-emotion" value="" />
+    <input type="hidden" name="v-ds3_10_timing" id="input-v-ds3_10-timing" value="" />
+    <input type="hidden" name="v-ds3_10_overall" id="input-v-ds3_10-overall" value="" />
+    <input type="hidden" name="v-ds3_11_richness" id="input-v-ds3_11-richness" value="" />
+    <input type="hidden" name="v-ds3_11_quality" id="input-v-ds3_11-quality" value="" />
+    <input type="hidden" name="v-ds3_11_emotion" id="input-v-ds3_11-emotion" value="" />
+    <input type="hidden" name="v-ds3_11_timing" id="input-v-ds3_11-timing" value="" />
+    <input type="hidden" name="v-ds3_11_overall" id="input-v-ds3_11-overall" value="" />
+    <input type="hidden" name="v-ds3_12_richness" id="input-v-ds3_12-richness" value="" />
+    <input type="hidden" name="v-ds3_12_quality" id="input-v-ds3_12-quality" value="" />
+    <input type="hidden" name="v-ds3_12_emotion" id="input-v-ds3_12-emotion" value="" />
+    <input type="hidden" name="v-ds3_12_timing" id="input-v-ds3_12-timing" value="" />
+    <input type="hidden" name="v-ds3_12_overall" id="input-v-ds3_12-overall" value="" />
+    <input type="hidden" name="v-ds3_13_richness" id="input-v-ds3_13-richness" value="" />
+    <input type="hidden" name="v-ds3_13_quality" id="input-v-ds3_13-quality" value="" />
+    <input type="hidden" name="v-ds3_13_emotion" id="input-v-ds3_13-emotion" value="" />
+    <input type="hidden" name="v-ds3_13_timing" id="input-v-ds3_13-timing" value="" />
+    <input type="hidden" name="v-ds3_13_overall" id="input-v-ds3_13-overall" value="" />
+    <input type="hidden" name="v-ds3_14_richness" id="input-v-ds3_14-richness" value="" />
+    <input type="hidden" name="v-ds3_14_quality" id="input-v-ds3_14-quality" value="" />
+    <input type="hidden" name="v-ds3_14_emotion" id="input-v-ds3_14-emotion" value="" />
+    <input type="hidden" name="v-ds3_14_timing" id="input-v-ds3_14-timing" value="" />
+    <input type="hidden" name="v-ds3_14_overall" id="input-v-ds3_14-overall" value="" />
+    <input type="hidden" name="v-ds3_15_richness" id="input-v-ds3_15-richness" value="" />
+    <input type="hidden" name="v-ds3_15_quality" id="input-v-ds3_15-quality" value="" />
+    <input type="hidden" name="v-ds3_15_emotion" id="input-v-ds3_15-emotion" value="" />
+    <input type="hidden" name="v-ds3_15_timing" id="input-v-ds3_15-timing" value="" />
+    <input type="hidden" name="v-ds3_15_overall" id="input-v-ds3_15-overall" value="" />
+    <input type="hidden" name="v-ds3_16_richness" id="input-v-ds3_16-richness" value="" />
+    <input type="hidden" name="v-ds3_16_quality" id="input-v-ds3_16-quality" value="" />
+    <input type="hidden" name="v-ds3_16_emotion" id="input-v-ds3_16-emotion" value="" />
+    <input type="hidden" name="v-ds3_16_timing" id="input-v-ds3_16-timing" value="" />
+    <input type="hidden" name="v-ds3_16_overall" id="input-v-ds3_16-overall" value="" />
+    <input type="hidden" name="v-ds3_17_richness" id="input-v-ds3_17-richness" value="" />
+    <input type="hidden" name="v-ds3_17_quality" id="input-v-ds3_17-quality" value="" />
+    <input type="hidden" name="v-ds3_17_emotion" id="input-v-ds3_17-emotion" value="" />
+    <input type="hidden" name="v-ds3_17_timing" id="input-v-ds3_17-timing" value="" />
+    <input type="hidden" name="v-ds3_17_overall" id="input-v-ds3_17-overall" value="" />
+    <input type="hidden" name="v-ds3_18_richness" id="input-v-ds3_18-richness" value="" />
+    <input type="hidden" name="v-ds3_18_quality" id="input-v-ds3_18-quality" value="" />
+    <input type="hidden" name="v-ds3_18_emotion" id="input-v-ds3_18-emotion" value="" />
+    <input type="hidden" name="v-ds3_18_timing" id="input-v-ds3_18-timing" value="" />
+    <input type="hidden" name="v-ds3_18_overall" id="input-v-ds3_18-overall" value="" />
+    <input type="hidden" name="v-ds3_19_richness" id="input-v-ds3_19-richness" value="" />
+    <input type="hidden" name="v-ds3_19_quality" id="input-v-ds3_19-quality" value="" />
+    <input type="hidden" name="v-ds3_19_emotion" id="input-v-ds3_19-emotion" value="" />
+    <input type="hidden" name="v-ds3_19_timing" id="input-v-ds3_19-timing" value="" />
+    <input type="hidden" name="v-ds3_19_overall" id="input-v-ds3_19-overall" value="" />
+    <input type="hidden" name="v-ds3_20_richness" id="input-v-ds3_20-richness" value="" />
+    <input type="hidden" name="v-ds3_20_quality" id="input-v-ds3_20-quality" value="" />
+    <input type="hidden" name="v-ds3_20_emotion" id="input-v-ds3_20-emotion" value="" />
+    <input type="hidden" name="v-ds3_20_timing" id="input-v-ds3_20-timing" value="" />
+    <input type="hidden" name="v-ds3_20_overall" id="input-v-ds3_20-overall" value="" />
+    <input type="hidden" name="v-ds3_21_richness" id="input-v-ds3_21-richness" value="" />
+    <input type="hidden" name="v-ds3_21_quality" id="input-v-ds3_21-quality" value="" />
+    <input type="hidden" name="v-ds3_21_emotion" id="input-v-ds3_21-emotion" value="" />
+    <input type="hidden" name="v-ds3_21_timing" id="input-v-ds3_21-timing" value="" />
+    <input type="hidden" name="v-ds3_21_overall" id="input-v-ds3_21-overall" value="" />
+    <input type="hidden" name="v-ds3_22_richness" id="input-v-ds3_22-richness" value="" />
+    <input type="hidden" name="v-ds3_22_quality" id="input-v-ds3_22-quality" value="" />
+    <input type="hidden" name="v-ds3_22_emotion" id="input-v-ds3_22-emotion" value="" />
+    <input type="hidden" name="v-ds3_22_timing" id="input-v-ds3_22-timing" value="" />
+    <input type="hidden" name="v-ds3_22_overall" id="input-v-ds3_22-overall" value="" />
+    <input type="hidden" name="v-ds3_23_richness" id="input-v-ds3_23-richness" value="" />
+    <input type="hidden" name="v-ds3_23_quality" id="input-v-ds3_23-quality" value="" />
+    <input type="hidden" name="v-ds3_23_emotion" id="input-v-ds3_23-emotion" value="" />
+    <input type="hidden" name="v-ds3_23_timing" id="input-v-ds3_23-timing" value="" />
+    <input type="hidden" name="v-ds3_23_overall" id="input-v-ds3_23-overall" value="" />
+    <input type="hidden" name="v-ds3_24_richness" id="input-v-ds3_24-richness" value="" />
+    <input type="hidden" name="v-ds3_24_quality" id="input-v-ds3_24-quality" value="" />
+    <input type="hidden" name="v-ds3_24_emotion" id="input-v-ds3_24-emotion" value="" />
+    <input type="hidden" name="v-ds3_24_timing" id="input-v-ds3_24-timing" value="" />
+    <input type="hidden" name="v-ds3_24_overall" id="input-v-ds3_24-overall" value="" />
+    <input type="hidden" name="v-ds3_25_richness" id="input-v-ds3_25-richness" value="" />      
+    <input type="hidden" name="v-ds3_25_quality" id="input-v-ds3_25-quality" value="" />
+    <input type="hidden" name="v-ds3_25_emotion" id="input-v-ds3_25-emotion" value="" />
+    <input type="hidden" name="v-ds3_25_timing" id="input-v-ds3_25-timing" value="" />
+    <input type="hidden" name="v-ds3_25_overall" id="input-v-ds3_25-overall" value="" />
+    <input type="hidden" name="v-ds3_26_richness" id="input-v-ds3_26-richness" value="" />
+    <input type="hidden" name="v-ds3_26_quality" id="input-v-ds3_26-quality" value="" />
+    <input type="hidden" name="v-ds3_26_emotion" id="input-v-ds3_26-emotion" value="" />
+    <input type="hidden" name="v-ds3_26_timing" id="input-v-ds3_26-timing" value="" />
+    <input type="hidden" name="v-ds3_26_overall" id="input-v-ds3_26-overall" value="" />
+    <input type="hidden" name="v-ds3_27_richness" id="input-v-ds3_27-richness" value="" />
+    <input type="hidden" name="v-ds3_27_quality" id="input-v-ds3_27-quality" value="" />
+    <input type="hidden" name="v-ds3_27_emotion" id="input-v-ds3_27-emotion" value="" />
+    <input type="hidden" name="v-ds3_27_timing" id="input-v-ds3_27-timing" value="" />
+    <input type="hidden" name="v-ds3_27_overall" id="input-v-ds3_27-overall" value="" />
+    <input type="hidden" name="v-ds3_28_richness" id="input-v-ds3_28-richness" value="" />
+    <input type="hidden" name="v-ds3_28_quality" id="input-v-ds3_28-quality" value="" />
+    <input type="hidden" name="v-ds3_28_emotion" id="input-v-ds3_28-emotion" value="" />
+    <input type="hidden" name="v-ds3_28_timing" id="input-v-ds3_28-timing" value="" />
+    <input type="hidden" name="v-ds3_28_overall" id="input-v-ds3_28-overall" value="" />
+    <input type="hidden" name="v-ds3_29_richness" id="input-v-ds3_29-richness" value="" />
+    <input type="hidden" name="v-ds3_29_quality" id="input-v-ds3_29-quality" value="" />
+    <input type="hidden" name="v-ds3_29_emotion" id="input-v-ds3_29-emotion" value="" />
+    <input type="hidden" name="v-ds3_29_timing" id="input-v-ds3_29-timing" value="" />
+    <input type="hidden" name="v-ds3_29_overall" id="input-v-ds3_29-overall" value="" />
+    <input type="hidden" name="v-ds3_30_richness" id="input-v-ds3_30-richness" value="" />
+    <input type="hidden" name="v-ds3_30_quality" id="input-v-ds3_30-quality" value="" />
+    <input type="hidden" name="v-ds3_30_emotion" id="input-v-ds3_30-emotion" value="" />
+    <input type="hidden" name="v-ds3_30_timing" id="input-v-ds3_30-timing" value="" />
+    <input type="hidden" name="v-ds3_30_overall" id="input-v-ds3_30-overall" value="" />
+    <input type="hidden" name="v-ds3_31_richness" id="input-v-ds3_31-richness" value="" />
+    <input type="hidden" name="v-ds3_31_quality" id="input-v-ds3_31-quality" value="" />
+    <input type="hidden" name="v-ds3_31_emotion" id="input-v-ds3_31-emotion" value="" />
+    <input type="hidden" name="v-ds3_31_timing" id="input-v-ds3_31-timing" value="" />
+    <input type="hidden" name="v-ds3_31_overall" id="input-v-ds3_31-overall" value="" />
+    <input type="hidden" name="v-ds3_32_richness" id="input-v-ds3_32-richness" value="" />
+    <input type="hidden" name="v-ds3_32_quality" id="input-v-ds3_32-quality" value="" />
+    <input type="hidden" name="v-ds3_32_emotion" id="input-v-ds3_32-emotion" value="" />
+    <input type="hidden" name="v-ds3_32_timing" id="input-v-ds3_32-timing" value="" />
+    <input type="hidden" name="v-ds3_32_overall" id="input-v-ds3_32-overall" value="" />
+    <input type="hidden" name="v-ds3_33_richness" id="input-v-ds3_33-richness" value="" />
+    <input type="hidden" name="v-ds3_33_quality" id="input-v-ds3_33-quality" value="" />
+    <input type="hidden" name="v-ds3_33_emotion" id="input-v-ds3_33-emotion" value="" />
+    <input type="hidden" name="v-ds3_33_timing" id="input-v-ds3_33-timing" value="" />
+    <input type="hidden" name="v-ds3_33_overall" id="input-v-ds3_33-overall" value="" />
+    <input type="hidden" name="v-ds3_34_richness" id="input-v-ds3_34-richness" value="" />
+    <input type="hidden" name="v-ds3_34_quality" id="input-v-ds3_34-quality" value="" />
+    <input type="hidden" name="v-ds3_34_emotion" id="input-v-ds3_34-emotion" value="" />
+    <input type="hidden" name="v-ds3_34_timing" id="input-v-ds3_34-timing" value="" />
+    <input type="hidden" name="v-ds3_34_overall" id="input-v-ds3_34-overall" value="" />
+    <input type="hidden" name="v-ds3_35_richness" id="input-v-ds3_35-richness" value="" />
+    <input type="hidden" name="v-ds3_35_quality" id="input-v-ds3_35-quality" value="" />
+    <input type="hidden" name="v-ds3_35_emotion" id="input-v-ds3_35-emotion" value="" />
+    <input type="hidden" name="v-ds3_35_timing" id="input-v-ds3_35-timing" value="" />
+    <input type="hidden" name="v-ds3_35_overall" id="input-v-ds3_35-overall" value="" />
+    <input type="hidden" name="v-ds3_36_richness" id="input-v-ds3_36-richness" value="" />
+    <input type="hidden" name="v-ds3_36_quality" id="input-v-ds3_36-quality" value="" />
+    <input type="hidden" name="v-ds3_36_emotion" id="input-v-ds3_36-emotion" value="" />
+    <input type="hidden" name="v-ds3_36_timing" id="input-v-ds3_36-timing" value="" />
+    <input type="hidden" name="v-ds3_36_overall" id="input-v-ds3_36-overall" value="" />
+    <input type="hidden" name="v-ds3_37_richness" id="input-v-ds3_37-richness" value="" />
+    <input type="hidden" name="v-ds3_37_quality" id="input-v-ds3_37-quality" value="" />
+    <input type="hidden" name="v-ds3_37_emotion" id="input-v-ds3_37-emotion" value="" />
+    <input type="hidden" name="v-ds3_37_timing" id="input-v-ds3_37-timing" value="" />
+    <input type="hidden" name="v-ds3_37_overall" id="input-v-ds3_37-overall" value="" />
+    <input type="hidden" name="v-ds3_38_richness" id="input-v-ds3_38-richness" value="" />
+    <input type="hidden" name="v-ds3_38_quality" id="input-v-ds3_38-quality" value="" />
+    <input type="hidden" name="v-ds3_38_emotion" id="input-v-ds3_38-emotion" value="" />
+    <input type="hidden" name="v-ds3_38_timing" id="input-v-ds3_38-timing" value="" />
+    <input type="hidden" name="v-ds3_38_overall" id="input-v-ds3_38-overall" value="" />
+    <input type="hidden" name="v-ds3_39_richness" id="input-v-ds3_39-richness" value="" />
+    <input type="hidden" name="v-ds3_39_quality" id="input-v-ds3_39-quality" value="" />
+    <input type="hidden" name="v-ds3_39_emotion" id="input-v-ds3_39-emotion" value="" />
+    <input type="hidden" name="v-ds3_39_timing" id="input-v-ds3_39-timing" value="" />
+    <input type="hidden" name="v-ds3_39_overall" id="input-v-ds3_39-overall" value="" />
+    <input type="hidden" name="v-ds3_40_richness" id="input-v-ds3_40-richness" value="" />
+    <input type="hidden" name="v-ds3_40_quality" id="input-v-ds3_40-quality" value="" />
+    <input type="hidden" name="v-ds3_40_emotion" id="input-v-ds3_40-emotion" value="" />
+    <input type="hidden" name="v-ds3_40_timing" id="input-v-ds3_40-timing" value="" />
+    <input type="hidden" name="v-ds3_40_overall" id="input-v-ds3_40-overall" value="" />
+    <input type="hidden" name="v-ds3_41_richness" id="input-v-ds3_41-richness" value="" />
+    <input type="hidden" name="v-ds3_41_quality" id="input-v-ds3_41-quality" value="" />
+    <input type="hidden" name="v-ds3_41_emotion" id="input-v-ds3_41-emotion" value="" />
+    <input type="hidden" name="v-ds3_41_timing" id="input-v-ds3_41-timing" value="" />
+    <input type="hidden" name="v-ds3_41_overall" id="input-v-ds3_41-overall" value="" />
+    <input type="hidden" name="v-ds3_42_richness" id="input-v-ds3_42-richness" value="" />
+    <input type="hidden" name="v-ds3_42_quality" id="input-v-ds3_42-quality" value="" />
+    <input type="hidden" name="v-ds3_42_emotion" id="input-v-ds3_42-emotion" value="" />
+    <input type="hidden" name="v-ds3_42_timing" id="input-v-ds3_42-timing" value="" />
+    <input type="hidden" name="v-ds3_42_overall" id="input-v-ds3_42-overall" value="" />
+    <input type="hidden" name="v-ds3_43_richness" id="input-v-ds3_43-richness" value="" />
+    <input type="hidden" name="v-ds3_43_quality" id="input-v-ds3_43-quality" value="" />
+    <input type="hidden" name="v-ds3_43_emotion" id="input-v-ds3_43-emotion" value="" />
+    <input type="hidden" name="v-ds3_43_timing" id="input-v-ds3_43-timing" value="" />
+    <input type="hidden" name="v-ds3_43_overall" id="input-v-ds3_43-overall" value="" />
+    <input type="hidden" name="v-ds3_44_richness" id="input-v-ds3_44-richness" value="" />
+    <input type="hidden" name="v-ds3_44_quality" id="input-v-ds3_44-quality" value="" />
+    <input type="hidden" name="v-ds3_44_emotion" id="input-v-ds3_44-emotion" value="" />
+    <input type="hidden" name="v-ds3_44_timing" id="input-v-ds3_44-timing" value="" />
+    <input type="hidden" name="v-ds3_44_overall" id="input-v-ds3_44-overall" value="" />
+    <input type="hidden" name="v-ds3_45_richness" id="input-v-ds3_45-richness" value="" />
+    <input type="hidden" name="v-ds3_45_quality" id="input-v-ds3_45-quality" value="" />
+    <input type="hidden" name="v-ds3_45_emotion" id="input-v-ds3_45-emotion" value="" />
+    <input type="hidden" name="v-ds3_45_timing" id="input-v-ds3_45-timing" value="" />
+    <input type="hidden" name="v-ds3_45_overall" id="input-v-ds3_45-overall" value="" />
+    <input type="hidden" name="v-ds3_46_richness" id="input-v-ds3_46-richness" value="" />
+    <input type="hidden" name="v-ds3_46_quality" id="input-v-ds3_46-quality" value="" />
+    <input type="hidden" name="v-ds3_46_emotion" id="input-v-ds3_46-emotion" value="" />
+    <input type="hidden" name="v-ds3_46_timing" id="input-v-ds3_46-timing" value="" />
+    <input type="hidden" name="v-ds3_46_overall" id="input-v-ds3_46-overall" value="" />
+    <input type="hidden" name="v-ds3_47_richness" id="input-v-ds3_47-richness" value="" />
+    <input type="hidden" name="v-ds3_47_quality" id="input-v-ds3_47-quality" value="" />
+    <input type="hidden" name="v-ds3_47_emotion" id="input-v-ds3_47-emotion" value="" />
+    <input type="hidden" name="v-ds3_47_timing" id="input-v-ds3_47-timing" value="" />
+    <input type="hidden" name="v-ds3_47_overall" id="input-v-ds3_47-overall" value="" />
+    <input type="hidden" name="v-ds3_48_richness" id="input-v-ds3_48-richness" value="" />
+    <input type="hidden" name="v-ds3_48_quality" id="input-v-ds3_48-quality" value="" />
+    <input type="hidden" name="v-ds3_48_emotion" id="input-v-ds3_48-emotion" value="" />
+    <input type="hidden" name="v-ds3_48_timing" id="input-v-ds3_48-timing" value="" />
+    <input type="hidden" name="v-ds3_48_overall" id="input-v-ds3_48-overall" value="" />
+
+    <input type="hidden" name="v-ds3_1-ds3_2_difference" id="input-v-ds3_1-ds3_2-difference" value="" />
+    <input type="hidden" name="v-ds3_1-ds3_2_piano" id="input-v-ds3_1-ds3_2-piano" value="" />
+    <input type="hidden" name="v-ds3_3-ds3_4_difference" id="input-v-ds3_3-ds3_4-difference" value="" />
+    <input type="hidden" name="v-ds3_3-ds3_4_piano" id="input-v-ds3_3-ds3_4-piano" value="" />
+    <input type="hidden" name="v-ds3_5-ds3_6_difference" id="input-v-ds3_5-ds3_6-difference" value="" />
+    <input type="hidden" name="v-ds3_5-ds3_6_piano" id="input-v-ds3_5-ds3_6-piano" value="" />
+    <input type="hidden" name="v-ds3_7-ds3_8_difference" id="input-v-ds3_7-ds3_8-difference" value="" />
+    <input type="hidden" name="v-ds3_7-ds3_8_piano" id="input-v-ds3_7-ds3_8-piano" value="" />
+    <input type="hidden" name="v-ds3_9-ds3_10_difference" id="input-v-ds3_9-ds3_10-difference" value="" />
+    <input type="hidden" name="v-ds3_9-ds3_10_piano" id="input-v-ds3_9-ds3_10-piano" value="" />
+    <input type="hidden" name="v-ds3_11-ds3_12_difference" id="input-v-ds3_11-ds3_12-difference" value="" />
+    <input type="hidden" name="v-ds3_11-ds3_12_piano" id="input-v-ds3_11-ds3_12-piano" value="" />
+    <input type="hidden" name="v-ds3_13-ds3_14_difference" id="input-v-ds3_13-ds3_14-difference" value="" />
+    <input type="hidden" name="v-ds3_13-ds3_14_piano" id="input-v-ds3_13-ds3_14-piano" value="" />
+    <input type="hidden" name="v-ds3_15-ds3_16_difference" id="input-v-ds3_15-ds3_16-difference" value="" />
+    <input type="hidden" name="v-ds3_15-ds3_16_piano" id="input-v-ds3_15-ds3_16-piano" value="" />
+    <input type="hidden" name="v-ds3_17-ds3_18_difference" id="input-v-ds3_17-ds3_18-difference" value="" />
+    <input type="hidden" name="v-ds3_17-ds3_18_piano" id="input-v-ds3_17-ds3_18-piano" value="" />
+    <input type="hidden" name="v-ds3_19-ds3_20_difference" id="input-v-ds3_19-ds3_20-difference" value="" />
+    <input type="hidden" name="v-ds3_19-ds3_20_piano" id="input-v-ds3_19-ds3_20-piano" value="" />
+    <input type="hidden" name="v-ds3_21-ds3_22_difference" id="input-v-ds3_21-ds3_22-difference" value="" />
+    <input type="hidden" name="v-ds3_21-ds3_22_piano" id="input-v-ds3_21-ds3_22-piano" value="" />
+    <input type="hidden" name="v-ds3_23-ds3_24_difference" id="input-v-ds3_23-ds3_24-difference" value="" />
+    <input type="hidden" name="v-ds3_23-ds3_24_piano" id="input-v-ds3_23-ds3_24-piano" value="" />
+    <input type="hidden" name="v-ds3_25-ds3_26_difference" id="input-v-ds3_25-ds3_26-difference" value="" />
+    <input type="hidden" name="v-ds3_25-ds3_26_piano" id="input-v-ds3_25-ds3_26-piano" value="" />
+    <input type="hidden" name="v-ds3_27-ds3_28_difference" id="input-v-ds3_27-ds3_28-difference" value="" />
+    <input type="hidden" name="v-ds3_27-ds3_28_piano" id="input-v-ds3_27-ds3_28-piano" value="" />
+    <input type="hidden" name="v-ds3_29-ds3_30_difference" id="input-v-ds3_29-ds3_30-difference" value="" />
+    <input type="hidden" name="v-ds3_29-ds3_30_piano" id="input-v-ds3_29-ds3_30-piano" value="" />
+    <input type="hidden" name="v-ds3_31-ds3_32_difference" id="input-v-ds3_31-ds3_32-difference" value="" />
+    <input type="hidden" name="v-ds3_31-ds3_32_piano" id="input-v-ds3_31-ds3_32-piano" value="" />
+    <input type="hidden" name="v-ds3_33-ds3_34_difference" id="input-v-ds3_33-ds3_34-difference" value="" />
+    <input type="hidden" name="v-ds3_33-ds3_34_piano" id="input-v-ds3_33-ds3_34-piano" value="" />
+    <input type="hidden" name="v-ds3_35-ds3_36_difference" id="input-v-ds3_35-ds3_36-difference" value="" />
+    <input type="hidden" name="v-ds3_35-ds3_36_piano" id="input-v-ds3_35-ds3_36-piano" value="" />
+    <input type="hidden" name="v-ds3_37-ds3_38_difference" id="input-v-ds3_37-ds3_38-difference" value="" />
+    <input type="hidden" name="v-ds3_37-ds3_38_piano" id="input-v-ds3_37-ds3_38-piano" value="" />
+    <input type="hidden" name="v-ds3_39-ds3_40_difference" id="input-v-ds3_39-ds3_40-difference" value="" />
+    <input type="hidden" name="v-ds3_39-ds3_40_piano" id="input-v-ds3_39-ds3_40-piano" value="" />
+    <input type="hidden" name="v-ds3_41-ds3_42_difference" id="input-v-ds3_41-ds3_42-difference" value="" />
+    <input type="hidden" name="v-ds3_41-ds3_42_piano" id="input-v-ds3_41-ds3_42-piano" value="" />
+    <input type="hidden" name="v-ds3_43-ds3_44_difference" id="input-v-ds3_43-ds3_44-difference" value="" />
+    <input type="hidden" name="v-ds3_43-ds3_44_piano" id="input-v-ds3_43-ds3_44-piano" value="" />
+    <input type="hidden" name="v-ds3_45-ds3_46_difference" id="input-v-ds3_45-ds3_46-difference" value="" />
+    <input type="hidden" name="v-ds3_45-ds3_46_piano" id="input-v-ds3_45-ds3_46-piano" value="" />
+    <input type="hidden" name="v-ds3_47-ds3_48_difference" id="input-v-ds3_47-ds3_48-difference" value="" />
+    <input type="hidden" name="v-ds3_47-ds3_48_piano" id="input-v-ds3_47-ds3_48-piano" value="" />
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    
+  // List of videos to show
+  const videosToShow = ["ds3_31", "ds3_32"];
+
+  // Video data
+  const videoData = {
+    ads_1: {
+      A: "165RAOuEFqqZ6s70ljMcVt5OIzKy__QIX",
+      B: "1V1wFsRNu1fDHolGICRE3UplNjqWV0yQG",
+      C: "1mOQ2xg66p6-i1h2C7lfasJqRZNxfz6vM"
+    },
+    ads_2: {
+      A: "1yXtpvmkJA9NntzEzOgIqB5pRmVAB7aGA",
+      B: "1Fx_FfwOTsliegY02ssVO5XfBMyI--7sw",
+      C: "1S8tjthcb0IpnlmdSQ6Um38bARPU5YxIl"
+    },
+    ads_3: {
+      A: "1BBXtKn0ONfgO2T-PyrqM-agOxctGVR2N",
+      B: "1Hr6qDzxJ2PGGaYbtwhVHIrh6Ra7p27TY",
+      C: "18tq8GKqBDCwKURoxUgTLOLAELAsex6Gi"
+    },
+    ads_4: {
+      A: "12lt5JLu7R7zZv9FUSGAJKfgkP5p1on-F",
+      B: "1RGfCTHMqiwyW_7CFyBvmKDOq5LqUY-fQ",
+      C: "1RWMszsEl2a5-2VBGbFWqoZVYGDFbwxC-"
+    },
+    ads_5: {
+      A: "1W_SdSk-LkyKXGJx6q5TDVk-xtwS0FBKp",
+      B: "1aM_1MtyQskoyCmSOGz9AHHGsH0jCKWCv",
+      C: "1i8BjOO_KQ2IImlMLEQpxLev8S7xwvS82"
+    },
+    ads_6: {
+      A: "1TYSEZKdaAUC5zAUb-u2ZnJaOPGQFZs2U",
+      B: "13NKs2p59QF09B1xNMLW7cGuMx9AZKpHV",
+      C: "1pCDOV1yzTz681LzcDjrPcvOyeNNGQ56m"
+    },
+    ads_7: {
+      A: "1B2vKbOmxOjEw88CtZsuIFu6RzChD2EOd",
+      B: "1KRz5SqJpjPfy9HYM36F4MIsSyIewo0jc",
+      C: "17rMzVHXYtoBenuEEpjxJqvV2yiKUPWtk"
+    },
+    ads_8: {
+      A: "1o8P_WCKBIfXHu4GI6YBLzjWnP2ThYBRI",
+      B: "1gBsDaoAikUhs_2XieQIUuuXHnMKEl4cP",
+      C: "1_BnI_A8_Qx32WIOHajOENnu5dEFMaT2H"
+    },
+    ads_9: {
+      A: "1zB4ocMUoiLWrd5am8rzYPl5laPfZV3J3",
+      B: "1sfMeq_6sM3m9pr0fKYZHquVSvVRgtD2o",
+      C: "1etRu3R5BhjhiNGLk2B5TSAr2uFNoY1-K"
+    },
+    ads_10: {
+      A: "1rl7QkloryRgBXsv9x8aRqv2zob1ybXCO",
+      B: "1vDUAKz6Pd9gBXe387kg6h22AZfJw5g7J",
+      C: "1ckJGTTPk6C3t5R8djMe9fMHwY1hwlPI1"
+    },
+    ads_11: {
+      A: "1MpmIQpEMT-N49eJDCsM8Z5icu5ZAehBz",
+      B: "1ObE0ogOZjljzGoqduZoZ-ud3A5Ds9a7s",
+      C: "1LXv8HULYLyX40bCovVkTDcpflBOMyLl8"
+    },
+    ads_12: {
+      A: "1EEd3NJO8EYHc11pJpTePnevey-4lGLnr",
+      B: "1kX56e-o_CpTNAwrKt9TeT4AuF5Vy7JQQ",
+      C: "160-CpMt-cAOXFaFmx5okqq5UlM9lwmWh"
+    },
+    ads_13: {
+      A: "1Z7pUtRqBw_6uLUAkN_Va1yI8_gGQQX4P",
+      B: "1TIRsP3s0gQml_a4l-vV3OA3dtpolNd0P",
+      C: "1gFgDp6aCKv4GigMCUHOk4XJBvbRm7T6x"
+    },
+    ads_14: {
+      A: "1o23qllWFkHi4bFTrRthX-FG-7XCD3-KN",
+      B: "1iZvIMd3fOzmcUXdc9tcgUaWYar9FPSfN",
+      C: "1fZBvnKxh9F8oTLJ2pdNdxf0EryTcj5x3"
+    },
+    ads_15: {
+      A: "1xy6NK1iJ5m6pMS7K_BjlnWGb0oy_BdIG",
+      B: "1dbXmIjuURgSDFo6_iq3zYhnE16sk9Itv",
+      C: "1PFmAyJZrjZwoX0swvnjsVFij2xAquXks"
+    },
+    ads_16: {
+      A: "1xx0mhgQhIMdA7D16bRaemtrYirCpZF0C",
+      B: "1W9gXRl7xKB-EVvAGtRX9R-li4X3UO3or",
+      C: "1Z1tXYVMniVG0coXKCQlLBMt_uNEr7jS7"
+    },
+    ads_17: {
+      A: "1Vu-5dJhWn-NuRZtg8m-UCNZDqHYQ8JQ4",
+      B: "1SNiLu6QAdFuZlangpypr27FAXjCjUY2U",
+      C: "14_X84yz4bFCqbfMaDnFXgYoDh5abtu3-"
+    },
+    ads_18: {
+      A: "1wcx5jVEF_D2WJ9HLZf1LJBn1HqhPFwv8",
+      B: "1zAsOYyhvEfYBjJVEUUP88DMZ0eZdC_1s",
+      C: "1F_q-ehR2JF3C3pIv5Tn_oA3cfjUlub27"
+    },
+    ads_19: {
+      A: "1d-wDqA3H9yxsyP7C6apA1GSaQgIMYWW4",
+      B: "1Pd73ZiVHwax2gwR92oq8S9LuhSfakkVz",
+      C: "1rWxQBGQ-xdl4LR9-MCCym5NT4KWr-dP9"
+    },
+    ads_20: {
+      A: "1-UXgvpYeHCnBwXyZgVjvb2Ww5J7V3caj",
+      B: "1MsYDwjZIbpD6KxkbeAGu2kO2x-nWnBFk",
+      C: "1oBESzmPTARwwR0ANvl4Dn-6Lr3xpIe_B"
+    },
+    ads_21: {
+      A: "1ep4ka966vCaBMwTDHDwgbl6ZZ-Gauham",
+      B: "1zKF8EW7jtaFESJ-i9eEKfUC02sfTHEsS",
+      C: "11IZWEjKQiThfqQvr2VgBPzdXYPAyGqIz"
+    },
+    ads_22: {
+      A: "1sY0514UElD-NX2WVE8NWRFsFlC7apPPW",
+      B: "1YsBEn2PuIU5_BtXz5PyM5US6uhp3dP35",
+      C: "1Tfpq1TYNUgZdZhTS6znUo8VGcZw8XdRY"
+    },
+    ads_23: {
+      A: "1o71zjRgkUGoZArIs5KN-Y22vFvHa9Y6O",
+      B: "1uYNvDScsDmrY8K5PZLhPRR46h2Hg22g7",
+      C: "1kn2wzaXf8C9QTAP3l3MvlgSSUxOr-NTc"
+    },
+    ads_24: {
+      A: "1-n9Yiu44v_oEDqQKP4pYf7FprKsHbxKw",
+      B: "1w8QhLB6LSkA3EHPfg1TU9lvn5QilbZC6",
+      C: "18_ZQj0LvvHIlmp8Ks-yQYM1FYAp50oKW"
+    },
+    ds3_1: {
+      A: "1kKnqEw7P_dF-GyDCDZXq07mxlOk2glUX",
+      B: "1NNTi1_1xbLjygKzsP6gdGp1o68eT3AJK",
+      C: "1aCyylcXYbyHuLeMatmB7_xIXHK8ebGza",
+    },
+    ds3_2: {
+      A: "1U3fKuwTILmNxCYLPBSlm4JV7SDW904if",
+      B: "1VWBb-ANQCLg_V3o5hWLSAO0eCLRDk368",
+      C: "1ohNqI5yrmY_sr_HZaTEK6gSbiHDPe-yS",
+    },
+    ds3_3: {
+      A: "1WwZ156Bn8lo8_7CI5z9rqVyqefFlfdK_",
+      B: "1C6Ps9CrdK6GjFNLv63CcANVErPovDY1V",
+      C: "1ELq-15IKVOJHT9I9nVtmlNHjGOQxxCgJ",
+    },
+    ds3_4: {
+      A: "1ZD6pFTE6wnmwYhH05G8eyWaT0GpZAMaD",
+      B: "1TzkJJ-IB9lHLXO2BXziR7v-YHGASlOiQ",
+      C: "1TLunlF7EbVK5q14jh-ufZnV_G6qTahoT",
+    },
+    ds3_5: {
+      A: "1VXQg4S9vlPiM0q8t9nhvqwwfTvVWTeLo",
+      B: "1G11VOcdgrlkMVEsYOX3WWrE9ydZJwq0D",
+      C: "1pQfycIqnRjyNUf0nA-cWhGx_C2SxB2vr",
+    },
+    ds3_6: {
+      A: "17JxJJIR-_Iwg-kZP_TjJKkwXQfbQ-nCG",
+      B: "1wFC7ngTQZaMXcagbg0T7wvm3Q-YvCgeq",
+      C: "1a08j0JgDp0Ml5Wf9kdQwpUbuNY4upqZ6",
+    },
+    ds3_7: {
+      A: "1YlU74tPBJmaNWvk6YNhs29sbWdPwgXpG",
+      B: "1bNkwsJR73wS_Hxq2v1B6VFxhPktl4150",
+      C: "1E3cozBqZTce69wMK22STiwziJYlWiIq2",
+    },
+    ds3_8: {
+      A: "1XnpuAe9uAU0-sHeBSj5lHsnd1OqBPHtW",
+      B: "1H2vzknsoZ2nV7t4xbp6juKnC6DnephWh",
+      C: "1Ku7wcccrPGoDmIUmhdNejT3rXg1HtXe0",
+    },
+    ds3_9: {
+      A: "1Nzxxzc_wMT9wWqtfqc5DqJCdTOF_iida",
+      B: "1-Zu6CQ1I_EorOB-FEl7LWW1hauETW_SH",
+      C: "1W04d2q0k0OYWlfKnlxygS5kJ6aoDRA3r",
+    },
+    ds3_10: {
+      A: "1ptd17u3jiLruxMo0QJHX92m9rGiziXVn",
+      B: "1avYVsWVKTk9FDT0WssA5Gv68rju7K4nn",
+      C: "1nZFgD1Xg1hgI-ZW8k9apGgcTJf1kGEgv",
+    },
+    ds3_11: {
+      A: "1_g4PUpiajr7aF5prCwuRfKCXhMbGxQRb",
+      B: "1X83FKdOE7QwgAoGT41zxmnH3smyAncUO",
+      C: "1YqvlRdH4PqTgsXnMkCNq7x7s6DKkfcSM",
+    },
+    ds3_12: {
+      A: "1g_N7kWCCWF4ejmZir_L2GyKg_RRsULjn",
+      B: "1_u02aoZq_7Ors0cMuHofgLDpiRsKTin2",
+      C: "1sgxQ8frAFtgj8TZiqaQWve8YTGiCDrwx",
+    },
+    ds3_13: {
+      A: "1fV6qq_MMJHpa9ont-7ScNzzc9AO_FbkW",
+      B: "1Rx03GG2D072kqwtdQ47ytDc-8OppUeEb",
+      C: "1kAg86s6fdgrZL72sPW82TIbO9wWIFBkm",
+    },
+    ds3_14: {
+      A: "1wihMc_m26LJN46sobcUBJMKbGQZAN0Lk",
+      B: "13GCj2YtXbOnsfC-wdyU6ZjRW7B67yf5f",
+      C: "17QTwTju9NekHbulX7DGgKzETeEM-51Wb",
+    },
+    ds3_15: {
+      A: "1UnJjy1_N6YD4UnzKtEfimOoPXV-PvuIe",
+      B: "1a3sboXvwVPEcIxDeWfZso9uTTpcv5DJg",
+      C: "1Ca5hcTgy-u9-9TmetD9Amu7B2G4owIbn",
+    },
+    ds3_16: {
+      A: "18fe_2idNL0di5PfnUi6a0W8x3SPQdCf6",
+      B: "1ZF1tyLa0Hs03KT7fGaTAcJi0gJ8jKn5G",
+      C: "15SAzpurnYUBf37k-NMHeLxfi1Z5pruqQ",
+    },
+    ds3_17: {
+      A: "1Fs9vkrmwr-y2PUqdttUH1CqUrVJjHrAP",
+      B: "1gVdnsc648qoTg26zqFiMzUXuFSrbvRY6",
+      C: "1Xc3kGqdZgCAuEGKlYeEN7P9fqNF-hgfl",
+    },
+    ds3_18: {
+      A: "1saw4HMrAl32jTviDaMS4lbdxFm3ooBar",
+      B: "1fJVyhWFheHCFdugMkXEaMe0LVhQICCTF",
+      C: "1HKViSdxPqTF33o5_Mx5piBLKxGEMp0u5",
+    },
+    ds3_19: {
+      A: "1lZ6FU0K5bUkipkyRRGVVBwaklqCOAbRT",
+      B: "1FEapJbl8caoBkBPhd1w8iQudWe0pWvtc",
+      C: "1-RUJUy0sYA6esR4KVkfsPaBSagw9P6Eg",
+    },
+    ds3_20: {
+      A: "1UrZQzafeNFcAgAIDyBGU_Jz_jtASytXb",
+      B: "1zEz14t58cWwTs1eapHS-hKHdJ4ZlWz-0",
+      C: "1XVf262_MQTDQLMpZnJULyWDavDaPtDVF",
+    },
+    ds3_21: {
+      A: "15pvS4vICeLO5Y-uAYBTiiUcRLBI5dm44",
+      B: "1mVpm0YttfaWgDMsJKIjgSoyCS2jhsyiW",
+      C: "1Kn6LBfgCJbpPwhvjk72XJ1ERxwxMUMrg",
+    },
+    ds3_22: {
+      A: "1BIy3EtthPfGpMbFudXsuL8dFFS7c9gJW",
+      B: "1U-RIaTZ8A5b2UKXOo7aifWaSfHcuEJ9P",
+      C: "1FWpg9CsS3kf-PMAt_X7w0dS7jj48LUYC",
+    },
+    ds3_23: {
+      A: "1sf4d-J9EZVz8PwbOg6UyvIttSvlDdsAJ",
+      B: "1y9GUOBUcZxLVlX3pNee39d3g0yAU-Zjt",
+      C: "1jbXinpsXS1vP9ja2maFEE1VLS9662PIb",
+    },
+    ds3_24: {
+      A: "1YLINFAbTTRf7HAyyymH2fQ3O6KOYgX8v",
+      B: "1Qn24PA2jH1Y9uzWUBsXGzdvS5rfSiGRY",
+      C: "1XqUgB0RNGQC2zdwH5ZWSY9cND2aygSB_",
+    },
+    ds3_25: {
+      A: "1U-Bt6pKrpS3XUqxuXPeAsLOOPaGWNcRi",
+      B: "1fejXyXTLkbCVEi5rIrHxcaskpJs4U_KN",
+      C: "1n4_TXZbUDOkzEwti7nF-ymUQ07CSNYp3",
+    },
+    ds3_26: {
+      A: "1KxZHRzFl85ajxe2sw2MrgHYDcHB9tThf",
+      B: "1sl1UZjBnJkYWhll3ztAkw0d2xHacM6jQ",
+      C: "1AlIhCU6TXtOsiG2EYUap4mPoVKBOmGi1",
+    },
+    ds3_27: {
+      A: "1sdinbHyQAtPX863C-gTEk4rYiDFWVlKK",
+      B: "18dcPb0mZNbiH1Tjx6ntrOYUkFW7342j1",
+      C: "1xbfrH73yqAK_2-rpOAenGDG9BGb9y0WH",
+    },
+    ds3_28: {
+      A: "1RL5273rzJ5RQHZ_S51F-nKuRfnwZTV1k",
+      B: "1gelNgBHFMUDBcvyzUe2OXiNzV-yJXiAl",
+      C: "1UvHD5fI7a_tKbnYn3kNRlqzQThCIrtuY",
+    },
+    ds3_29: {
+      A: "1gd8a7BV99WpHDzFUnsPzvNVKq4xsnsMF",
+      B: "1TWIqWuhf4Rd7hm4e58Fs12zjVoeoiiTq",
+      C: "1RCZVJKCO4be7mzkjAPkGlUW3QfLCvciT",
+    },
+    ds3_30: {
+      A: "1mzMXB7YyXVm5VVSZTjGMzkWTKzohgOCM",
+      B: "1WY7C0bkW4jfMft45vYAIMxO7QdCzBlza",
+      C: "1JmlF4bY5Yj3m0f45ldoV74MM5wjTMUbg",
+    },
+    ds3_31: {
+      A: "1dLjRKoILT5u-VA2YilWzlBbJPYu0k7rY",
+      B: "1Qw-lp4U0juU89clRk3OOtBPIyAy1EAkb",
+      C: "1uWk-VJhPhx1zRVJ5Tjy9wShHjweDpKTu",
+    },
+    ds3_32: {
+      A: "1JgdyPVlUmlMecVMCy0_Ram7RteUvzBW6",
+      B: "12aVErxiwC6jHjLc8Ce0C5UcmzUQw_Mrp",
+      C: "1hn_I0KojvRjK6gdYXBPf9pEl4NEQhWMC",
+    },
+    ds3_33: {
+      A: "1BBVcK0iYt8YQZhF7DtwpbQb8LRcne5QD",
+      B: "1uTT7ktBhvxKwhPlR-hBs3iKYVyf2QY6O",
+      C: "10ydmWBeJuyo4bgISELUZ-YrX_z6ZW70R",
+    },
+    ds3_34: {
+      A: "1EbxQ6JSjsddCcWkCsBqXyhYRnZ7ioftB",
+      B: "1o1oDaKyAYnnJyE_C-Bbt3qqoOtdKT9Oc",
+      C: "1K8s_r6ejZ2-OaoBT4SQv57rbrXaIZPkG",
+    },
+    ds3_35: {
+      A: "1cGxX8XP-1S96mQIqEJNpzU8hag9Lv7Vi",
+      B: "1WfDWjKZ1XsPe_rbu_Qz1MglMFOEprC1E",
+      C: "1irooB-FeqhOBPDmSHPgcRITNnVQNrrea",
+    },
+    ds3_36: {
+      A: "105rL20NLXYyEwmTyK9zxsdrXXv2_QZGY",
+      B: "1PwZ9qKr573GDzlTthFY35WWqAlpWbfOe",
+      C: "1fvmawbWWficeZmjpRt-C-D3Owxla1vDU",
+    },
+    ds3_37: {
+      A: "1Z2MFOVB3u-8BLFjo868MkpPhhPT2xhhu",
+      B: "1ziDzIrMqHvkp25GKTmrKVWNvko71Uu6M",
+      C: "19eXMwakRRxV2jaZJfIaRHitFXjLnW3Np",
+    },
+    ds3_38: {
+      A: "1N5qxEr3_5VsL6Hjq6ThdMzMUiZ-d86J8",
+      B: "1wN9aFBNvOeMWk8HKz6TdNynlrk02d8b4",
+      C: "1mU8DQpGMzgevNUu-uI2dKsgos2gg9Rby",
+    },
+    ds3_39: {
+      A: "1k421QK3JF88tRLKdCjFWNag8Wnd1dr_Q",
+      B: "1Q4JPTEegtKFvVGkKYc7A-zXbb9AoCKdN",
+      C: "1sJOL62iAhtuoun9gD99GeTEuHDVPuSG2",
+    },
+    ds3_40: {
+      A: "1nrc9eL5lorTVFslAaQV7o_0zKnZ9cFm4",
+      B: "1NXYLXFlB1D_anQKkiivqIwD6U5RvnWAh",
+      C: "1uK64fBuhX3Qldx6ZqWo8yes4YU4ZWHRY",
+    },
+    ds3_41: {
+      A: "1EDsSSk_VmQGnHU_48i4EG5CarxMNI0Ni",
+      B: "12sUMgxwlgkGsssVYckUWGRc2W4ZIj8Nb",
+      C: "1m_Y3e88O_iOhsbhTIt7t4iwhnc2VGEii",
+    },
+    ds3_42: {
+      A: "1M5hPANfUwSv13YiebAlATW-6J3knGwRK",
+      B: "1nrFYFbGTn9KjfiqOVJ8-Hybs4jJ6Fea5",
+      C: "1FVNKFIRWGr2wAcHpOqBE06iPwkGxjWly",
+    },
+    ds3_43: {
+      A: "1fueikDSGihp4k3jrapnqaGS2aEXPRinr",
+      B: "1ljixEvE5AtE8lLDEo0H3BAAOUilRHrhV",
+      C: "1v9eNXRFHOLyE-XvfpBqAdXRtym4AtiSD",
+    },
+    ds3_44: {
+      A: "1sytgTPvpVCNshdrCZzgGo2sNd-Tv2qN8",
+      B: "1erJk8a7ap0FZLKyelu-oh1wXE7TV1lvX",
+      C: "17fSpY9-4JKJkinsXUd0BQFe0tXayQMAw",
+    },
+    ds3_45: {
+      A: "1Hkbmk3JhHvW2QhMRjFo_jB2TzDUBMW8W",
+      B: "1XCl3YuzXr8jlDF2YTFc1RXzYogIFuHLh",
+      C: "1d1VjOnN50saEJqmpFtN0Vl6j_aM-J7Mp",
+    },
+    ds3_46: {
+      A: "1pmd36_QO70h0CM3mZ59h9-tKxzgwU8T3",
+      B: "1ba5Nuv9-tEiafiVxeH5bYbvbjazQr0xL",
+      C: "10qgCJj63YUuT75iN52DMiJNtLPD7bdP5",
+    },
+    ds3_47: {
+      A: "1AmeMVP-PK9-_oyusMK1UxnRKQbysXmP_",
+      B: "1VL1LmVhto4oPxF7K4h5esSJeWHqKA3Vz",
+      C: "1QJaenDDm6LtPBQimtU_rzJVjjgZjv_Mh",
+    },
+    ds3_48: {
+      A: "1-OpQjqD9JNWFbmcEZcvGlehI7V0QXifh",
+      B: "1UEBq3LSV60vuc5xA9HqeElo3YDfBNboJ",
+      C: "1NcG6qi7QfND88RnDkySjwpK7mXEbm9Kz",
+    }
+    
+  };
+
+    // Mapping from metric to question
+    const metricToQuestion = {
+      "richness": "Please rank the musical richness and diversity, independent of the video content.",
+      "quality": "Please rank the musical quality (not sound quality), independent of the video content.",
+      "emotion": "Please rank how well the music matches the video in terms of emotion.",
+      "timing": "Please rank how well the music synchronizes with the video in terms of rhythm and timing.",
+      "overall": "Please rank how well the music matches the video in overall terms."
+    };
+
+    // Generate video sections and ranking questions
+    const videoSections = document.getElementById("video-sections");
+    let index = 1; // Start the index at 1
+
+    videosToShow.forEach(videoNum => {
+      // Add video header with the incrementing index
+      const videoHeader = document.createElement("h2");
+      videoHeader.textContent = `Video ${index}`; // Use the index instead of the video number
+      videoSections.appendChild(videoHeader);
+
+      // Create video container
+      const videoContainer = document.createElement("div");
+      videoContainer.className = "video-container";
+
+      // Loop through methods (A, B, C)
+      Object.entries(videoData[videoNum]).forEach(([method, fileId]) => {
+        const videoBox = document.createElement("div");
+        videoBox.className = "video-box";
+
+        // Add method header
+        const header = document.createElement("h3");
+        header.textContent = `Method ${method}`;
+        videoBox.appendChild(header);
+
+        // Construct the full URL using the file ID
+        const fullUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+
+        // Add iframe
+        const iframe = document.createElement("iframe");
+        iframe.src = fullUrl;
+        iframe.allow = "autoplay";
+        videoBox.appendChild(iframe);
+
+        videoContainer.appendChild(videoBox);
+      });
+
+      videoSections.appendChild(videoContainer);
+
+      // Ranking group (updated to use metricToQuestion)
+      const rankingGroup = document.createElement("div");
+      rankingGroup.className = "ranking-group";
+      rankingGroup.innerHTML = `
+        <div class="ranking-question">
+          <h3>${metricToQuestion["richness"]}</h3>
+          <div class="ranking-section">
+            <div class="source" id="source-v${videoNum}-richness">
+              <div class="draggable-item" draggable="true" data-method="Method A">Method A</div>
+              <div class="draggable-item" draggable="true" data-method="Method B">Method B</div>
+              <div class="draggable-item" draggable="true" data-method="Method C">Method C</div>
+            </div>
+            <div class="target" id="target-v${videoNum}-richness">
+              <div class="drop-slot" data-rank="1">Most diverse</div>
+              <div class="drop-slot" data-rank="2">Moderately diverse</div>
+              <div class="drop-slot" data-rank="3">Least diverse</div>
+            </div>
+          </div>
+        </div>
+        <div class="ranking-question">
+          <h3>${metricToQuestion["quality"]}</h3>
+          <div class="ranking-section">
+            <div class="source" id="source-v${videoNum}-quality">
+              <div class="draggable-item" draggable="true" data-method="Method A">Method A</div>
+              <div class="draggable-item" draggable="true" data-method="Method B">Method B</div>
+              <div class="draggable-item" draggable="true" data-method="Method C">Method C</div>
+            </div>
+            <div class="target" id="target-v${videoNum}-quality">
+              <div class="drop-slot" data-rank="1">Highest quality</div>
+              <div class="drop-slot" data-rank="2">Moderate quality</div>
+              <div class="drop-slot" data-rank="3">Lowest quality</div>
+            </div>
+          </div>
+        </div>
+        <div class="ranking-question">
+          <h3>${metricToQuestion["emotion"]}</h3>
+          <div class="ranking-section">
+            <div class="source" id="source-v${videoNum}-emotion">
+              <div class="draggable-item" draggable="true" data-method="Method A">Method A</div>
+              <div class="draggable-item" draggable="true" data-method="Method B">Method B</div>
+              <div class="draggable-item" draggable="true" data-method="Method C">Method C</div>
+            </div>
+            <div class="target" id="target-v${videoNum}-emotion">
+              <div class="drop-slot" data-rank="1">Best match</div>
+              <div class="drop-slot" data-rank="2">Moderate match</div>
+              <div class="drop-slot" data-rank="3">Worst match</div>
+            </div>
+          </div>
+        </div>
+        <div class="ranking-question">
+          <h3>${metricToQuestion["timing"]}</h3>
+          <div class="ranking-section">
+            <div class="source" id="source-v${videoNum}-timing">
+              <div class="draggable-item" draggable="true" data-method="Method A">Method A</div>
+              <div class="draggable-item" draggable="true" data-method="Method B">Method B</div>
+              <div class="draggable-item" draggable="true" data-method="Method C">Method C</div>
+            </div>
+            <div class="target" id="target-v${videoNum}-timing">
+              <div class="drop-slot" data-rank="1">Best match</div>
+              <div class="drop-slot" data-rank="2">Moderate match</div>
+              <div class="drop-slot" data-rank="3">Worst match</div>
+            </div>
+          </div>
+        </div>
+        <div class="ranking-question">
+          <h3>${metricToQuestion["overall"]}</h3>
+          <div class="ranking-section">
+            <div class="source" id="source-v${videoNum}-overall">
+              <div class="draggable-item" draggable="true" data-method="Method A">Method A</div>
+              <div class="draggable-item" draggable="true" data-method="Method B">Method B</div>
+              <div class="draggable-item" draggable="true" data-method="Method C">Method C</div>
+            </div>
+            <div class="target" id="target-v${videoNum}-overall">
+              <div class="drop-slot" data-rank="1">Best match</div>
+              <div class="drop-slot" data-rank="2">Moderate match</div>
+              <div class="drop-slot" data-rank="3">Worst match</div>
+            </div>
+          </div>
+        </div>
+      `;
+      videoSections.appendChild(rankingGroup);
+
+      index++; // Increment the index for the next video
+    });
+
+    const horizontalLine = document.createElement("hr");
+    horizontalLine.style.margin = "30px 0";
+    videoSections.appendChild(horizontalLine);
+
+    const completionMessage = document.createElement("p");
+    completionMessage.textContent = "For the following two questions, please consider both videos.";
+    completionMessage.style.fontSize = "20px";
+    completionMessage.style.marginTop = "20px";
+    completionMessage.style.marginBottom = "40px";
+    videoSections.appendChild(completionMessage);
+
+
+    // Concatenate video numbers for the new question IDs
+    const visibleVideoIds = videosToShow.join("-"); // Use hyphen "-" instead of underscore "_"
+
+    // const visibleVideoIds = videosToShow
+
+    // Add Ranking Differences Question
+    const rankingDifferencesGroup = document.createElement("div");
+    rankingDifferencesGroup.innerHTML = `
+      <div class="ranking-question">
+      <h3>Please rank the methods based on how different the songs are between Video 1 and Video 2, ignoring the video content.</h3>
+
+      <p>For each method (A, B, and C), compare the music in Video 1 and Video 2. For example, to evaluate Method A, compare the songs in Video 1 Method A and Video 2 Method A. Do the same for Methods B and C.</p>
+
+      <p>Then, rank the methods from most different to least different, based on how much the music changes between the two videos.</p>
+
+      <p><strong>Important:</strong> First, compare Video 1 and Video 2 within each method. Then, compare across methods to decide which one shows the biggest difference in music.</p>
+        <div class="ranking-section">
+          <div class="source" id="source-v${visibleVideoIds}-difference">
+            <div class="draggable-item" draggable="true" data-method="Method A">Method A</div>
+            <div class="draggable-item" draggable="true" data-method="Method B">Method B</div>
+            <div class="draggable-item" draggable="true" data-method="Method C">Method C</div>
+          </div>
+          <div class="target" id="target-v${visibleVideoIds}-difference">
+            <div class="drop-slot" data-rank="1">Most different</div>
+            <div class="drop-slot" data-rank="2">Moderately different</div>
+            <div class="drop-slot" data-rank="3">Least different</div>
+          </div>
+        </div>
+      </div>
+    `;
+    videoSections.appendChild(rankingDifferencesGroup);
+
+    // Add Piano Method Dropdown Question
+    const pianoMethodGroup = document.createElement("div");
+    pianoMethodGroup.innerHTML = `
+      <div class="ranking-question">
+      <h3>Which method features music played exclusively on the piano?</h3>
+      <div style="margin-bottom: 20px;"></div>
+      <select id="v${visibleVideoIds}-piano" name="v${visibleVideoIds}-piano" style="margin-left: 10px; padding: 5px; font-size: 16px;" required>
+        <option value="">Select an option</option>
+        <option value="Method A">Method A</option>
+        <option value="Method B">Method B</option>
+        <option value="Method C">Method C</option>
+      </select>
+      </div>
+    `;
+    videoSections.appendChild(pianoMethodGroup);
+
+    // Drag-and-drop setup (updated)
+    function setupDragAndDrop(sourceId, targetId, inputId) {
+      console.log(`Setting up drag-and-drop for inputId: ${inputId}`); // Debugging
+      const source = document.getElementById(sourceId);
+      const target = document.getElementById(targetId);
+      const items = source.querySelectorAll('.draggable-item');
+      const slots = target.querySelectorAll('.drop-slot');
+      let draggedItem = null;
+
+      if (!document.getElementById(inputId)) {
+        console.error(`Hidden input with id "${inputId}" not found!`);
+      }
+
+      // Store original text content for each slot
+      const originalTexts = new Map();
+      slots.forEach(slot => {
+        originalTexts.set(slot, slot.textContent);
+      });
+
+      // Drag-and-drop event listeners
+      items.forEach(item => {
+        item.addEventListener('dragstart', () => {
+          draggedItem = item;
+          item.classList.add('dragging');
+        });
+        item.addEventListener('dragend', () => {
+          draggedItem = null;
+          item.classList.remove('dragging');
+        });
+      });
+
+      slots.forEach(slot => {
+        slot.addEventListener('dragover', e => e.preventDefault());
+        slot.addEventListener('drop', () => {
+          if (!draggedItem) return;
+
+          // Move existing item back to source if slot is already filled
+          if (slot.firstChild && slot.firstChild !== draggedItem) {
+            source.appendChild(slot.firstChild);
+          }
+
+          // Add dragged item to the slot
+          slot.textContent = ''; // Clear the slot's text
+          slot.appendChild(draggedItem);
+          slot.classList.add('filled');
+        });
+      });
+
+      // Allow items to be moved back to the source
+      source.addEventListener('dragover', e => e.preventDefault());
+      source.addEventListener('drop', () => {
+        if (!draggedItem) return;
+
+        const parent = draggedItem.parentElement;
+        if (parent.classList.contains('drop-slot')) {
+          // Reset the slot's text to its original label
+          parent.textContent = originalTexts.get(parent);
+          parent.classList.remove('filled');
+        }
+        source.appendChild(draggedItem);
+      });
+
+      // Function to collect rankings and update hidden input
+      return function collectRanking() {
+        const result = [];
+        let incomplete = false;
+
+        slots.forEach(slot => {
+          const child = slot.querySelector('.draggable-item');
+          if (child) {
+            result.push(child.dataset.method);
+          } else {
+            incomplete = true; // Mark as incomplete if any slot is empty
+          }
+        });
+
+        if (incomplete) {
+          // Clear the hidden input if incomplete
+          document.getElementById(inputId).value = "";
+          return false; // Return false to indicate incomplete ranking
+        }
+
+        // Update the hidden input with the collected ranking
+        document.getElementById(inputId).value = result.join(', ');
+        return true;
+      };
+    }
+
+    // Setup drag-and-drop for all videos
+    const collectFunctions = [];
+    videosToShow.forEach(videoNum => {
+      ["richness", "quality", "emotion", "timing", "overall"].forEach(question => {
+        collectFunctions.push(
+          setupDragAndDrop(
+            `source-v${videoNum}-${question}`,
+            `target-v${videoNum}-${question}`,
+            `input-v-${videoNum}-${question}` // This matches your hidden input IDs
+          )
+        );
+      });
+    });
+
+    // Setup drag-and-drop for the ranking differences question
+    collectFunctions.push(
+      setupDragAndDrop(
+        `source-v${visibleVideoIds}-difference`,
+        `target-v${visibleVideoIds}-difference`,
+        `input-v-${visibleVideoIds}-difference`
+      )
+    );
+
+    console.log(`Generated inputId: input-v-${videoNum.replace('_', '-')}-${question}`);
+    console.log(`Generated visibleVideoIds: ${visibleVideoIds}`);
+    console.log(`Ranking Differences Input ID: input-v-${visibleVideoIds}-difference`);
+    console.log(`Piano Method Input ID: v${visibleVideoIds}-piano`);
+    console.log(`Piano Hidden Input ID: input-v-${visibleVideoIds}-piano`);
+
+    function handleSubmit(event) {
+      event.preventDefault();
+      let allValid = true;
+
+      // Validate Prolific ID
+      const prolificIdInput = document.getElementById("prolific-id");
+      if (!prolificIdInput.value.trim()) {
+        allValid = false; // Mark as invalid if Prolific ID is empty
+      }
+
+      // Validate all ranking questions
+      collectFunctions.forEach(collect => {
+        if (!collect()) {
+          allValid = false; // Continue checking other questions
+        }
+      });
+
+      // Validate Ranking Differences Question
+      const rankingDifferencesInput = document.getElementById(`input-v-${visibleVideoIds}-difference`);
+      console.log(`Ranking Differences Input:`, rankingDifferencesInput); // Debugging
+      if (!rankingDifferencesInput || !rankingDifferencesInput.value.trim()) {
+        allValid = false;
+      }
+
+      // Validate Piano Method Dropdown
+      const pianoMethodInput = document.getElementById(`v${visibleVideoIds}-piano`);
+      console.log(`Piano Method Input:`, pianoMethodInput); // Debugging
+      if (!pianoMethodInput || !pianoMethodInput.value) {
+        allValid = false;
+      } else {
+        const pianoHiddenInput = document.getElementById(`input-v-${visibleVideoIds}-piano`);
+        console.log(`Piano Hidden Input:`, pianoHiddenInput); // Debugging
+        if (pianoHiddenInput) {
+          pianoHiddenInput.value = pianoMethodInput.value;
+        }
+      }
+
+      if (!allValid) {
+        alert('Please complete all questions before submitting.');
+        return false;
+      }
+
+      // If all questions are valid, submit the form
+      event.target.submit();
+      return true;
+    }
+  </script>
+
+</body>
+</html>
